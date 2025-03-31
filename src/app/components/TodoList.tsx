@@ -38,7 +38,8 @@ const TodoList: React.FC = () => {
       }
       return;
     }
-
+  
+    
     try {
       const calendarResponse = await fetch('/api/calendar/addEvent', {
         method: 'POST',
@@ -51,17 +52,27 @@ const TodoList: React.FC = () => {
           endTime: `${todo.date}T${todo.endTime}:00`,    
         }),
       });
-
+      
       if (!calendarResponse.ok) {
         const error = await calendarResponse.json();
         throw new Error(error.message || 'Google Calendar API request failed');
       }
-
+      
       const eventData = await calendarResponse.json();
       console.log('Event added to Google Calendar:', eventData);
     } catch (error) {
       console.error('Error adding event to calendar:', error);
     }
+  };
+  
+  const toggleTodoCompletion = (id: number) => {
+    setTodos(todos.map(todo => 
+      todo.id === id ? { ...todo, completed: !todo.completed } : todo
+    ));
+  };
+
+  const removeTodo = (id: number) => {
+    setTodos(todos.filter(todo => todo.id !== id));
   };
 
   const addTodo = () => {
@@ -126,13 +137,26 @@ const TodoList: React.FC = () => {
       </div>
 
       <ul className="space-y-2">
-        {todos.map((todo) => (
+      {todos.map((todo) => (
           <li
             key={todo.id}
             className="p-4 bg-gray-100 rounded shadow flex justify-between items-center"
           >
             <div>
-              <span className="font-medium">{todo.text}</span> <br />
+              <input
+                type="checkbox"
+                checked={todo.completed}
+                onChange={() => {
+                  toggleTodoCompletion(todo.id);
+                  if (!todo.completed) {
+                    removeTodo(todo.id);
+                  }
+                }}
+                className="mr-2"
+              />
+              <span className={`font-medium ${todo.completed ? 'line-through' : ''}`}>
+                {todo.text}
+              </span> <br />
               <span className="text-sm text-gray-500">
                 {todo.date} {todo.startTime} - {todo.endTime}
               </span>
